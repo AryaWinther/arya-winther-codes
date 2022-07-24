@@ -1,6 +1,7 @@
 """
 Main module for running the Python code defined in Teachers.py
 """
+from Teachers import TeacherArya
 from Teachers import TeacherJessica
 import numpy
 
@@ -51,3 +52,28 @@ try:
 		student_art_grades=student_art_grades)
 except Exception as ex:
 	print('\nTeacher 3 could not be instantiated because:', ex)
+
+# Define some custom math, art and science grades for Hakim and Erica.
+math_grades = {'Hakim': 8, 'Erica': 9}
+student_art_grades = {'Hakim': 9, 'Erica': 10}
+student_science_grades = {'Hakim': 10, 'Erica': 7}
+
+# Create a teacher Arya which is their teacher.
+teacher_arya1 = TeacherArya(
+	student_math_grades=math_grades,
+	student_art_grades=student_art_grades,
+	student_science_grades=student_science_grades)
+
+# Print the math grades.
+print('Math (Teacher Arya):', teacher_arya1.studentMathGrades())
+
+# Print the average grade.
+print('Average (Teacher Arya):', teacher_arya1.determineAverageGrade())
+
+# Catch the exception from trying to create a visualization.
+try:
+	teacher_arya1.generateHtmlVisualization(html_filename='new.html')
+except Exception as ex:
+	print("""\n Teacher Arya's grades could not be visualized because:""", ex)
+
+

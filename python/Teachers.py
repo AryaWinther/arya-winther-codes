@@ -262,6 +262,124 @@ class TeacherJessica(object):
 		return wise_quotes_final
 
 
+class TeacherArya(TeacherJessica):
+
+	def __init__(
+			self, 
+			student_math_grades, 
+			student_science_grades,
+			student_art_grades=None,
+			students_getting_along_matrix=None):
+		"""
+		This class implements an object called teacher Arya, which
+		takes the names of their students as input, and the
+		grades of each students in math and potentially in art. Arya
+		teaches the same fields as Jessica, but also science on top of math and art.
+
+		:param student_math_grades:
+			The grade for each student in math. The grade must be an integer
+			number between 1 and 10. 
+		:type student_math_grades:
+			dict of type {str: int}
+
+		:param student_science_grades:
+			The grade for each student in science. The grade must be an integer
+			number between 1 and 10. 
+		:type student_science_grades:
+			dict of type {str: int}
+
+		param student_art_grades:
+			The grade for each student in art. The names must match
+			the ones in ```student_math_grades```. By default,
+			the grade 8 is given for each student specified
+			in ``student_math_grades``.  
+			|DEFAULT| ``8`` for each student.
+		:type student_art_grades:
+			dict of type {str: float}
+
+		:param students_getting_along_matrix:
+			A matrix which describes how well each student gets along with each
+			other and themselves. The getting-along metric is a float between
+			0 and 1: 1 is perfect and 0 not hating each other. The matrix can be given 
+			as a full symmetric matrix, or an upper-triangular one.
+			|DEFAULT| An upper-triangular matrix with 1's on the diagonal and 0.5 
+					  (getting along OK-ish on the off-diagonals).
+		:type students_getting_along_matrix:
+			```numpy.ndarray``
+		"""
+		# Initialize the base class.
+		super().__init__(
+			student_math_grades=student_math_grades,
+			student_art_grades=student_art_grades,
+			students_getting_along_matrix=students_getting_along_matrix)
+
+		# Set and check the science grades.
+		student_science_grades = setAndCheckStudentGrades(student_science_grades, 'art')
+
+		# Check that all names match the ones in the math grades.
+		names_are_valid = (student_math_grades.keys() == student_science_grades.keys())
+		if not names_are_valid:
+			raise Exception('Mismatch between the student names for math and science grades.')
+
+		# All good, set the grades.
+		self._student_science_grades = student_science_grades
+
+	def studentScienceGrades(self):
+		""" 
+		:returns:
+			The science grades of the students.
+		:rtype:
+			dict of type {str: int}
+		"""
+		return self._student_science_grades
+
+	def determineAverageGrade(self, weights=None):
+		"""
+		Method for calculating the average grade for each student, taking a
+		weighted average between math, art and science, according to the given
+		```weights.``
+
+		:returns:
+			The average grade for each student in a dictionary.
+		:rtype:
+			dict of type {str: int}
+		"""
+		if weights is None:
+			weights_array = numpy.array([1.0 / 3] * 3)
+		else:
+			weights_array = numpy.array(weights)
+
+		# Fetch the grades.
+		math_grades_dict = self.studentMathGrades()
+		art_grades_dict = self.studentArtGrades()
+		science_grades_dict = self.studentScienceGrades()
+
+		# Calculate the average grade for each student and return it.
+		# First gather the math and art grades of each student in a list
+		# of tuples.
+		grades_math_art_science = [
+			(math_grade, art_grade, science_grade) for math_grade, art_grade, science_grade in zip(
+				math_grades_dict.values(), art_grades_dict.values(), science_grades_dict.values())
+		]
+
+		# Then calculate the average grades using the given weights. 
+		average_grades = {
+			student_name: numpy.round(numpy.average(numpy.array(grades), weights=weights), decimals=2)
+			for student_name, grades in zip(self.studentNames(), grades_math_art_science)
+		}
+
+		return average_grades
+
+	def generateHtmlVisualization(
+			self, 
+			html_filename,
+			show_grades_image=False):
+		"""
+		Html visualization is not implemented yet for teacher Arya.
+		"""
+		raise Exception('Html visualization of grades is not implemented for TeacherArya.')
+
+
 def setAndCheckStudentGrades(student_grades, field):
 	"""
 	Utility method for checking that the given student grades
