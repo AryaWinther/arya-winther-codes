@@ -84,7 +84,15 @@ class TeacherJessica(object):
 		"""
 		return self._student_art_grades
 
-	def studentsGettingAlongMatrix(self):
+	def _studentsGettingAlongMatrix(self):
+		""" """
+		"""
+		:returns:
+			The matrix containing the numbers describing how well
+			students get along with themselves and each other.
+		:rtype:
+			```numpy.ndarray``
+		"""
 		return self._students_getting_along_matrix
 
 	def studentNames(self):
@@ -101,6 +109,11 @@ class TeacherJessica(object):
 		Method for calculating the average grade for each student, taking a
 		weighted average between math and art, according to the given
 		```weights.``
+
+		:returns:
+			The average grade for each student in a dictionary.
+		:rtype:
+			dict of type {str: int}
 		"""
 		if weights is None:
 			weights_array = numpy.array([0.5, 0.5])
@@ -145,7 +158,7 @@ class TeacherJessica(object):
 		# Determine the initial success for taking the Fro-norm of the
 		# students getting along matrix.
 		students_getting_along_norm = numpy.linalg.norm(
-			self.studentsGettingAlongMatrix())
+			self._studentsGettingAlongMatrix())
 
 		# Normalize it according to the number of students, multiply by 100
 		# to convert to percentages, and round to include 2 decimals only.
@@ -230,7 +243,7 @@ class TeacherJessica(object):
 			Wise quotes from different philosophers, ones that teacher
 			Jessica is very fond of.
 		:rtype:
-			dict of type {str: str}
+			str
 		"""
 		# Hard-coded here a few different ones from Confucius, Plato and 
 		# the Sage in Tao Te Ching from Lao Tzu.
