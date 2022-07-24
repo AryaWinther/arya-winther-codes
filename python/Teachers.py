@@ -44,17 +44,14 @@ class TeacherJessica(object):
 			```numpy.ndarray``
 		"""
 		# Check and set the math grades.
-		if not isinstance(student_math_grades, dict):
-			raise Exception('Invalid type of student_math_grades!')
-		self._student_math_grades = student_math_grades
+		self._student_math_grades = setAndCheckStudentGrades(student_math_grades, 'math')
 
 		# Check and set the art grades, if given.
 		if student_art_grades is None:
 			self._student_art_grades = {name: 8 for name in student_math_grades.keys()}
 		else:
-			if not isinstance(student_art_grades, dict):
-				raise Exception(
-					'student_art_grades must be given as a dict with student names as keys and grades as values.')
+			# Do the basic checks on the art grades.
+			student_art_grades = setAndCheckStudentGrades(student_art_grades, 'art')
 
 			# Check that all names match the ones in the math grades.
 			names_are_valid = (student_math_grades.keys() == student_art_grades.keys())
@@ -263,4 +260,44 @@ class TeacherJessica(object):
 			%s""") % (', '.join(names), '.\n\n'.join(quotes)) + '.'
 
 		return wise_quotes_final
+
+
+def setAndCheckStudentGrades(student_grades, field):
+	"""
+	Utility method for checking that the given student grades
+	is a valid student grades dictionary. If the grades are valid,
+	the method returns them.
+
+	:param student_grades:
+		The grade for each student in a dictionary.
+	:type student_grades:
+		dict of type {str: int}
+
+	:param field:
+		The field or discipline.
+	:type field:
+		str
+
+	:returns:
+		The checked student grades.
+	:rtype:
+		dict of type {str: int}
+	"""
+	if not isinstance(student_grades, dict) or len(student_grades) == 0:
+		raise Exception('The student grades must be given as non-empty dictionary.')
+
+	# Check names.
+	names_valid = all(isinstance(key, str) for key in student_grades.keys())
+	if not names_valid:
+		raise Exception('The names of the students must be strings.')
+
+	# Check grades.
+	grades_valid = (
+		all(isinstance(value, int) and (value >= 1 and value <= 10) for value in student_grades.values())
+	)
+	if not grades_valid:
+		raise Exception('The %s grades of the students must be integers between 1 and 10.' % field)
+
+	# All good, return.
+	return student_grades
 

@@ -38,3 +38,16 @@ print(TeacherJessica.wiseQuotes())
 teacher2.generateHtmlVisualization(
 	html_filename='test.html',
 	show_grades_image=True)
+
+# Define some custom invalid math and art grades for Arya and Jessica.
+math_grades = {'Arya': 0, 'Jessica': 7}
+student_art_grades = {'Arya': 10, 'Jessica': 11}
+
+# Catch the exception to make sure the program runs, print
+# the content of the exception instead.
+try:
+	teacher3 = TeacherJessica(
+		student_math_grades=math_grades,
+		student_art_grades=student_art_grades)
+except Exception as ex:
+	print('\nTeacher 3 could not be instantiated because:', ex)
