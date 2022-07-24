@@ -1,7 +1,7 @@
 # This example class has been written by Arya Winther,
 # 2022.
 
-import django
+import matplotlib.pyplot as plt
 import numpy
 import textwrap
 
@@ -87,6 +87,15 @@ class TeacherJessica(object):
 	def studentsGettingAlongMatrix(self):
 		return self._students_getting_along_matrix
 
+	def studentNames(self):
+		""" 
+		:returns:
+			The names of all students:
+		:rtype:
+			list of str
+		"""
+		return list(self.studentMathGrades().keys())
+
 	def determineAverageGrade(self, weights=None):
 		"""
 		Method for calculating the average grade for each student, taking a
@@ -140,15 +149,64 @@ class TeacherJessica(object):
 
 		# Normalize it according to the number of students, multiply by 100
 		# to convert to percentages, and round to include 2 decimals only.
-		students_getting_along_norm /= len(self.studentMathGrades().keys())
+		students_getting_along_norm /= len(self.studentNames())
 		students_getting_along_norm = numpy.round(100 * students_getting_along_norm, decimals=2)
 
 		return students_getting_along_norm
 
-	def generateHtml(self):
+	def generateHtmlVisualization(
+			self, 
+			html_filename,
+			show_grades_image=False):
 		"""
+		Method for generating a visualization of the student grades as an
+		image in an html file.
+
+		:param html_filename:
+			The name of the generated html file name.
+		:type html_filename:
+			str
+
+		:param show_grades_image:
+			Whether the visualization of the grades will also be shown on
+			the screen. Note that the html file is not generated, until the
+			image is closed.
+			|DEFAULT| False
+		:type show_grades_images:
+			bool
 		"""
-		html_template = textwrap.dedent("""\
+		# Fetch names and grades.
+		student_names = self.studentNames()
+		math_grades = list(self.studentMathGrades().values())
+		art_grades = list(self.studentArtGrades().values())
+		  
+		# Set up the x axis and create a bar plot with both grades
+		# shown for each student.
+		x_axis = numpy.arange(len(student_names))
+		plt.bar(x_axis - 0.2, math_grades, 0.4, label = 'Math')
+		plt.bar(x_axis + 0.2, art_grades, 0.4, label = 'Art')
+		  
+		# Set up the ticks, labels and a legend.
+		plt.xticks(x_axis, student_names, fontsize=14)
+		plt.yticks(fontsize=14)
+		plt.xlabel("Student", fontsize=18)
+		plt.ylabel("Grade", fontsize=18)
+		plt.legend(fontsize=14, loc='upper center')
+
+		# Set limit to 1 to 10 + a little extra.
+		plt.ylim(1.0, 10.1)
+
+		# Save it and fetch the figure dimensions in pixels.
+		plt.savefig('grades.png', dpi=200)
+		fig = plt.gcf()
+		fig_width, fig_height = fig.get_size_inches() * fig.dpi
+
+		# If requested, show the image.
+		if show_grades_image:
+			plt.show()
+
+		# Define a html template and add the correct figure dimensions.
+		html_image = textwrap.dedent("""\
 			<html>
 			<head>
 			<title>Grades of Jessica's students</title>
@@ -156,15 +214,14 @@ class TeacherJessica(object):
 			<body>
 			<h2>Visualization of grades</h2>
 			  
-			<p>Default code has been loaded into the Editor.</p>
+			<img src="grades.png" alt="Grades" width="{}" height="{}">
 			  
 			</body>
-			</html>""")
+			</html>""").format(fig_width, fig_height)
 
-		# to open/create a new html file in the write mode
-		with open('student_grades.html', 'w') as f:
-			# writing the code into the file
-			f.write(html_template)
+		# Write the image to the given html file.
+		with open(html_filename, 'w') as f:
+			f.write(html_image)
 
 	@staticmethod
 	def wiseQuotes():

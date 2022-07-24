@@ -34,4 +34,7 @@ print('Teacher success (%):', teacher2.calculateTeacherSuccess())
 # all teachers named Jessica have the same philosophy.
 print(TeacherJessica.wiseQuotes())
 
-teacher2.generateHtml()
+# Generate a visualization in an html file. Also show the visualization on screen.
+teacher2.generateHtmlVisualization(
+	html_filename='test.html',
+	show_grades_image=True)
