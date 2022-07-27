@@ -1,6 +1,11 @@
 """ This module implements methods for solving linear matrix equations """
 
 import numpy
+from scipy.linalg import solve_triangular
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import spsolve
+
+import time
 
 
 class LinearSolvers(object):
@@ -85,15 +90,47 @@ class LinearSolvers(object):
 
 		if use_cholesky:
 			# We already have the decomposition; thus solve L y = b for y first.
-			y = numpy.linalg.solve(cholesky_L, rhs_vector)
+			y = solve_triangular(cholesky_L, rhs_vector, lower=True)
 
 			# Then L^T x = y for x.
-			solution_vector = numpy.linalg.solve(numpy.transpose(cholesky_L), y)
+			solution_vector = solve_triangular(numpy.transpose(cholesky_L), y)
 		else:
 			# Simply solve directly.
 			solution_vector = numpy.linalg.solve(lhs_matrix, rhs_vector)
 
 		return solution_vector
+
+	def solveDirectInverseSparse(self, lhs_matrix, rhs_vector):
+		"""
+		Method for solving the linear equation Ax = b using sparse matrix
+		methods. The input matrix A is assumed to contain at least 90 % zeros.
+		The method will throw an exception if that is not the case.
+
+		:param lhs_matrix:
+			The left-hand matrix A.
+		:type lhs_matrix:
+			``numpy.ndarray`` which represents a square matrix.
+
+		:param rhs_vector:
+			The right-hand side vector b.
+		:type rhs_vector:
+
+		:returns:
+			The solution, accurate up to the iteration tolerance.
+		:rtype:
+			``numpy.ndarray``
+		"""
+		# Check that it is sparse enough.
+		nonzero_ratio = numpy.count_nonzero(lhs_matrix) / lhs_matrix.size
+		if nonzero_ratio > 0.1:
+			raise Exception(
+				'The matrix is not sparse enough. Use one of the other methods instead.')
+
+		# Convert the input LHS matrix to sparse and solve.
+		lhs_sparse = csr_matrix(lhs_matrix)
+		solution = spsolve(lhs_sparse, b)
+
+		return solution
 
 	def _checkCholesky(self, lhs_matrix):
 		""" """
@@ -186,6 +223,9 @@ class LinearSolvers(object):
 		if not lhs_matrix_valid:
 			raise Exception('lhs_matrix must be symmetric and positive definite for the CG method.')
 
+		# NOTE: this is just for demo. Multiple versions of CG are available 
+		# in scipy, pre-implemented.
+
 		# Start with an random initial guess.
 		dimension = len(rhs_vector)
 		previous_solution = numpy.random.uniform(low=0.0, high=1.0, size=(dimension,))
@@ -217,7 +257,7 @@ class LinearSolvers(object):
 		return solution
 
 # Define matrix dimension and reate an identity matrix first.
-dimension = 25
+dimension = 5000
 A = numpy.eye(dimension)
 
 # Make it tridiagonal but still diagonally dominent (to keep it positive def.).
@@ -233,14 +273,24 @@ b = numpy.random.uniform(low=0.0, high=1.0, size=(dimension,))
 solvers = LinearSolvers(
 	direct_inverse_cholesky=True, 
 	iterative_solver_tolerance=1e-10)
+t0 = time.time()
 solution_direct_cholesky = solvers.solveDirectInverse(A, b)
+print('Direct inverse using Cholesky (s):', numpy.round(time.time() - t0, decimals=3))
+t0 = time.time()
+solution_sparse = solvers.solveDirectInverseSparse(A, b)
+print('Direct inverse using sparse solver (s):', numpy.round(time.time() - t0, decimals=3))
+t0 = time.time()
 solution_cg = solvers.solveConjugateGradient(A, b)
+print('Solution using CG (s):', numpy.round(time.time() - t0, decimals=3))
+t0 = time.time()
 solution_descent = solvers.solveGradientDescent(A, b)
+print('Solution using gradient descent (s):', numpy.round(time.time() - t0, decimals=3))
 
 ref_solution = numpy.linalg.solve(A, b)
 
 print('CG vs ref', numpy.linalg.norm(ref_solution - solution_cg))
 print('Gradient vs ref', numpy.linalg.norm(ref_solution - solution_descent))
 print('Direct cholesky vs ref', numpy.linalg.norm(ref_solution - solution_direct_cholesky))
+print('Sparse solver vs ref', numpy.linalg.norm(ref_solution - solution_sparse))
 
 		
