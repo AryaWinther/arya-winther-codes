@@ -1,6 +1,7 @@
 """ Module implementing a type of object which can be saved to an HDF5 file """
 
 from abc import ABC, abstractmethod
+import ast
 import h5py
 import numpy
 import re
@@ -22,7 +23,13 @@ def processHdf5Data(hdf5_dataset_value):
 	be returned as it is.
 	"""
 	if isinstance(hdf5_dataset_value, bytes):
-		return hdf5_dataset_value.decode("utf-8")
+		hdf5_dataset_value = hdf5_dataset_value.decode("utf-8")
+
+	# If the value is a string, it can also be a dict saved as a string.
+	# Thus, call literal eval of ast to make sure the final data type
+	# is correct.
+	if isinstance(hdf5_dataset_value, str):
+		hdf5_dataset_value = ast.literal_eval(hdf5_dataset_value)
 
 	return hdf5_dataset_value
 
@@ -62,6 +69,9 @@ class Serializable(ABC):
 		# Save the data to an hdf5 file and close it.
 		h5_file = h5py.File(hdf5_filename, "w")
 		for name, value in zip(existing_properties, properties_values):
+			# Convert dicts to string, since hdf5 doesn't natively support them.
+			if isinstance(value, dict):
+				value = str(value)
 			h5_file.create_dataset(name, data=value)
 		h5_file.close()
 
@@ -83,53 +93,3 @@ class Serializable(ABC):
 
 		# Return a new instance.
 		return cls(**existing_properties_dict)
-
-
-class SerializableClass(Serializable):
-
-	@classmethod
-	def _serializableProperties(cls):
-		"""
-		Define the properties which should be serialized.
-		"""
-		return ['my_string', 'numpy_array', 'my_integer_list']
-
-	def __init__(self, my_string, numpy_array, my_integer_list):
-		"""
-		An example class deriving from Serializable which can be serialized
-		to an hdf5 file.
-		"""
-		self._my_string = my_string
-		self._numpy_array = numpy_array
-		self._my_integer_list = my_integer_list
-
-	def myString(self):
-		return self._my_string
-
-	def numpyArray(self):
-		return self._numpy_array
-
-	def myIntegerList(self):
-		return self._my_integer_list
-
-
-# Create a serializable class object.
-exp_array = numpy.exp(0.1 * numpy.arange(1, 10))
-test_object = SerializableClass(
-	my_string='this_is_a_string', 
-	numpy_array=exp_array,
-	my_integer_list=[-5, 5, 25, 11])
-
-# Define an hdf5 file name and save and read the object.
-hdf5_file = 'test.hdf5'
-test_object.saveToFile(hdf5_file)
-read_object = SerializableClass.instantiateFromFile(hdf5_file)
-
-print(read_object.myString())
-print(read_object.numpyArray())
-print(read_object.myIntegerList())
-
-print('correctly saved?', numpy.linalg.norm(exp_array - read_object.numpyArray()) == 0.0)
-
-
-

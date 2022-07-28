@@ -1,8 +1,10 @@
 """ A module containing unit tests for the classes defined in Teachers module """
 
+import os
 import unittest
 import numpy
 
+from Teachers import TeacherArya
 from Teachers import TeacherJessica
 
 class TeacherJessicaTest(unittest.TestCase):
@@ -36,7 +38,7 @@ class TeacherJessicaTest(unittest.TestCase):
             students_getting_along_matrix=getting_along_matrix)
         self.assertTrue(
             numpy.array_equal(
-                getting_along_matrix, teacher3._studentsGettingAlongMatrix()))
+                getting_along_matrix, teacher3.studentsGettingAlongMatrix()))
 
     def testDetermineAverageGrade(self):
         """ Test the method for calculating the average grade for the students """
@@ -94,7 +96,73 @@ class TeacherJessicaTest(unittest.TestCase):
         self.assertGreater(teacher_success, 60)
         self.assertLess(teacher_success, 90)
 
+    def testSerialization(self):
+        """ Test that a TeacherJessica object can be serialized """
+        # Create an object.
+        math_grades = {'Kim': 7, 'Nadine': 8}
+        getting_along_matrix = numpy.array([[0.9, 0.6], [0.6, 0.7]])
+        teacher = TeacherJessica(
+            student_math_grades=math_grades,
+            students_getting_along_matrix=getting_along_matrix)
+
+        # Save it.
+        filename = 'test_file.hdf5'
+        with open(filename, 'w'):
+            teacher.saveToFile(filename)
+
+        # Read it back.
+        with open(filename, 'r'):
+            read_teacher = TeacherJessica.instantiateFromFile(filename)
+
+        # Check that the data of the read object matches the original data, plus
+        # that the art grades are default.
+        self.assertEqual(math_grades, read_teacher.studentMathGrades())
+        self.assertEqual({'Kim': 8, 'Nadine': 8}, read_teacher.studentArtGrades())
+        self.assertTrue(numpy.array_equal(
+            getting_along_matrix, read_teacher.studentsGettingAlongMatrix())
+        )
+
+        # Remove the temp file.
+        os.remove(filename)
+
+
     # TODO: a unit test for html image generation and tests for TeacherArya.
+
+
+class TeacherAryaTest(unittest.TestCase):
+    """ Test class for the class TeacherArya """
+
+    def testSerialization(self):
+        """ Test that a TeacherJessica object can be serialized """
+        # Create an object.
+        math_grades = {'Kim': 7, 'Nadine': 8}
+        science_grades = {'Kim': 5, 'Nadine': 9}
+        getting_along_matrix = numpy.array([[0.9, 0.6], [0.6, 0.7]])
+        teacher = TeacherArya(
+            student_math_grades=math_grades,
+            student_science_grades=science_grades,
+            students_getting_along_matrix=getting_along_matrix)
+
+        # Save it.
+        filename = 'test_file.hdf5'
+        with open(filename, 'w'):
+            teacher.saveToFile(filename)
+
+        # Read it back.
+        with open(filename, 'r'):
+            read_teacher = TeacherArya.instantiateFromFile(filename)
+
+        # Check that the data of the read object matches the original data, plus
+        # that the art grades are default.
+        self.assertEqual(math_grades, read_teacher.studentMathGrades())
+        self.assertEqual({'Kim': 8, 'Nadine': 8}, read_teacher.studentArtGrades())
+        self.assertEqual(science_grades, read_teacher.studentScienceGrades())
+        self.assertTrue(numpy.array_equal(
+            getting_along_matrix, read_teacher.studentsGettingAlongMatrix())
+        )
+
+        # Remove the temp file.
+        os.remove(filename)
 
 
 if __name__ == '__main__':

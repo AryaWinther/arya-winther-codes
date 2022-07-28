@@ -5,7 +5,20 @@ import matplotlib.pyplot as plt
 import numpy
 import textwrap
 
-class TeacherJessica(object):
+from Serializable import Serializable
+
+class TeacherJessica(Serializable):
+
+	@classmethod
+	def _serializableProperties(cls):
+		"""
+		Define the properties which should be serialized.
+		"""
+		return [
+			'student_math_grades', 
+			'student_art_grades', 
+			'students_getting_along_matrix'
+		]
 
 	def __init__(
 			self, 
@@ -81,8 +94,7 @@ class TeacherJessica(object):
 		"""
 		return self._student_art_grades
 
-	def _studentsGettingAlongMatrix(self):
-		""" """
+	def studentsGettingAlongMatrix(self):
 		"""
 		:returns:
 			The matrix containing the numbers describing how well
@@ -155,7 +167,7 @@ class TeacherJessica(object):
 		# Determine the initial success for taking the Fro-norm of the
 		# students getting along matrix.
 		students_getting_along_norm = numpy.linalg.norm(
-			self._studentsGettingAlongMatrix())
+			self.studentsGettingAlongMatrix())
 
 		# Normalize it according to the number of students, multiply by 100
 		# to convert to percentages, and round to include 2 decimals only.
@@ -263,6 +275,16 @@ class TeacherJessica(object):
 
 
 class TeacherArya(TeacherJessica):
+
+	@classmethod
+	def _serializableProperties(cls):
+		"""
+		Define the properties which should be serialized.
+		"""
+		properties = super()._serializableProperties()
+		properties.append('student_science_grades')
+
+		return properties
 
 	def __init__(
 			self, 
